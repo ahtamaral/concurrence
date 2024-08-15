@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
    printf("\nVetor após interação das threads:\n");
 
    for ( int i = 0; i < vectorLen; i++) {
-      vec[i] = 0;
+      // vec[i] = 0;
       printf("%d ", vec[i]);
    }
 

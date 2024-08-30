@@ -16,7 +16,7 @@ void matrixMultiplication( int m, int n, float *A, float *B, float *result )
         for ( int j = 0; j < n; j++ )
         {
             result[i * n + j] = 0;  // Initialize the result element to 0
-            for ( int k = 0; k < n; k++) 
+            for ( int k = 0; k < n; k++ ) 
             {
                 result[i * n + j] += A[i * n + k] * B[k * n + j];
             }
@@ -66,6 +66,12 @@ int main(int argc, char* argv[])
     {
         fprintf(stderr, " Erro de leitura das dimensoes da matriz no arquivo \n" );
         return 3;
+    }
+
+    if ( m != n )
+    {
+        fprintf(stderr, " Por simplicidade, este programa só está aceitando matrizes quadradas. Tente novamente. \n" );
+        return 7;
     }
 
     A = (float *) malloc( sizeof( float ) * m * n );

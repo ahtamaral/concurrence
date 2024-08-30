@@ -84,6 +84,8 @@ int main(int argc, char* argv[])
         return 4;
     }
 
+    fclose( fd );
+
     free( A );
     free( B );
 

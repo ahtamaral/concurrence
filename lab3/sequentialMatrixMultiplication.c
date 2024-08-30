@@ -187,9 +187,9 @@ int main(int argc, char* argv[])
     finishingDuration = finish - start;
 
     fprintf(stdout, "Tempos de execução:\n\n");
-    fprintf(stdout, "Inicialização: %f s\n", initDuration);
-    fprintf(stdout, "Processamento: %f s\n", procDuration);
-    fprintf(stdout, "Finalização: %f s\n\n", finishingDuration);
+    fprintf(stdout, "Inicialização: %.0f ns\n", initDuration);
+    fprintf(stdout, "Processamento: %.0f ns\n", procDuration);
+    fprintf(stdout, "Finalização: %.0f ns\n\n", finishingDuration);
 
     return 0;
 }

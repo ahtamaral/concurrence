@@ -22,7 +22,7 @@
 #define GET_TIME(now) { \
    struct timespec time; \
    clock_gettime(CLOCK_MONOTONIC, &time); \
-   now = time.tv_sec + time.tv_nsec/1000000000.0; \
+   now = (BILLION * time.tv_sec) + time.tv_nsec; \
 }
 #endif
 //now = time.tv_sec + time.tv_nsec/1000000000.0; //seconds

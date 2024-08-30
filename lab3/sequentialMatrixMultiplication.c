@@ -38,7 +38,8 @@ int main(int argc, char* argv[])
     FILE * fd; // File descriptor
     size_t ret; // Size returned by fread().
 
-    if(argc < 3) {
+    if(argc < 3) 
+    {
         fprintf( stderr, "Uso: %s <arquivo entrada> <arquivo saida>\n", argv[0] );
         return 1;
     }
@@ -135,7 +136,29 @@ int main(int argc, char* argv[])
 
     procDuration = finish - start; 
 
-    GET_TIME( start );  
+    GET_TIME( start );
+
+    fclose( fd ); // Fecha arquivo de entrada.
+
+    fd = fopen( argv[2], "wb" ); // Abre arquivo de saída.
+
+    if ( !fd )
+    {
+        fprintf( stderr, "Erro de abertura de arquivo.\n");
+        return 3;
+    }
+
+    ret = fwrite( &m, sizeof(int), 1, fd);
+    ret = fwrite( &n, sizeof(int), 1, fd);
+    ret = fwrite( C, sizeof(float), m * n, fd);
+
+    if ( ret < m * n )
+    {
+        fprintf( stderr, "Erro de escrita no  arquivo\n" );
+        return 4;
+    }
+
+    fclose( fd ); // Fecha arquivo de saída.
 
     #ifdef DEBUG
     fprintf( stdout, "\nResulting matrix:\n" );
@@ -149,10 +172,9 @@ int main(int argc, char* argv[])
     }
     #endif
 
-    fclose( fd );
-
     free( A );
     free( B );
+    free( C );
 
     GET_TIME( finish );
 

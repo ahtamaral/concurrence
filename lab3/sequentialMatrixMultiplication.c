@@ -187,9 +187,13 @@ int main(int argc, char* argv[])
     finishingDuration = finish - start;
 
     fprintf(stdout, "Tempos de execução:\n\n");
-    fprintf(stdout, "Inicialização: %.0f ns\n", initDuration);
-    fprintf(stdout, "Processamento: %.0f ns\n", procDuration);
-    fprintf(stdout, "Finalização: %.0f ns\n\n", finishingDuration);
+    // fprintf(stdout, "Inicialização: %.0f ns\n", initDuration);
+    // fprintf(stdout, "Processamento: %.0f ns\n", procDuration);
+    // fprintf(stdout, "Finalização: %.0f ns\n\n", finishingDuration);
+
+    // Output em CSV p; facilitar a criação da tabela.
+    fprintf(stdout, "Inicialização, Processamento, Finalização\n");
+    fprintf(stdout, "%.0f,%.0f,%.0f\n", initDuration, procDuration, finishingDuration);
 
     return 0;
 }

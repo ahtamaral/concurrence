@@ -13,10 +13,13 @@
 #define N        10
 
 // Variaveis globais
-sem_t podeEscreverNoBuffer, podeLerBuffer;      //semaforos para coordenar a ordem de execucao das threads
+sem_t podeEscreverNoBuffer, podeLerBuffer, podeEscreverResultadoEmArquivo;      //semaforos para coordenar a ordem de execucao das threads
 int terminouLeituraDoArquivo = 0;
 
-char buffer1[N + 1];  // +1 to store the null terminator for the string
+char buffer1[N + 1];  // +1 para armazenar END OF STRING
+
+// Buffer2 comporta o equivalente a até 200 blocos de tamanho N. Comprimento arbitrário.
+char buffer2[ ( N * 200 )];
 
 //funcao executada pela thread 1
 void *leitor (void *arg) 
@@ -69,12 +72,17 @@ void *leitor (void *arg)
 
 void *processador (void *arg) {
 
+    int n = 0;
+    int linelength = 0;
     char myBuffer1[N + 1]; 
+    int buf2Index = 0;
 
     printf("[ t2 ] Processador esta executando...\n");
 
     while( 1 )
     {
+        linelength = 2*n + 1;
+
         // Quando o processador puder ler o buffer 1, prossegue
         printf("[ t2 ] Processador está aguardando liberação para consumir buffer1.\n");
         sem_wait( &podeLerBuffer );
@@ -90,31 +98,53 @@ void *processador (void *arg) {
 
         // Copia conteúdo do buffer1 para buffer local.
         strcpy(myBuffer1, buffer1);
+
+        for ( int i = 0; i < strlen( buffer1 ); i++ )
+        {
+            buffer2[ buf2Index ] = buffer1[ i ];
+            buf2Index++;            
+        }
+
         printf("[ t2 ] Processador criou cópia local do buffer1: %s\n", myBuffer1);
 
         // Quando o processador já tiver lido o buffer e o leitor puder sobrescrevê-lo, emite este sinal.
         printf("[ t2 ] Leitor pode sobrescrever buffer1.\n");
         sem_post( &podeEscreverNoBuffer);
         
+        if ( n < 10) n++;
     }
+
+    buffer2[ buf2Index + 1 ] = '\0';
+    printf("buf2: %s\n", buffer2);
+
+    sem_post( &podeEscreverResultadoEmArquivo );
 
     printf("[ t2 ] Processador terminou execucao!\n");
     pthread_exit(NULL);
 }
 
 void *escritor (void *arg) {
-//    printf("Thread : 1 esta executando...\n");
-   
-//    printf("Thread : 1 mudou estado!\n");
-//    //faz qq coisa ate mudar de estado
-//    sem_post(&estado1); 
-   
-//    printf("Thread : 1 terminou!\n");
-//    pthread_exit(NULL);
-    // printf("Escritor esta executando...\n");
 
+    printf("[ t3 ] Escritor esta executando...\n");
 
-    // printf("Escritor terminou execucao!\n");
+    printf("[ t3 ] Escritor aguardando liberação para escrever buffer2 em arquivo texto.\n");
+    sem_wait( &podeEscreverResultadoEmArquivo );
+
+    printf("[ t3 ] Escritor LIBERADO para escrever buffer2 em arquivo texto.\n");
+
+    FILE *file = fopen("out.txt", "w");
+
+    if (file == NULL) 
+    {
+        perror("Error opening file");
+        pthread_exit(NULL);
+    }
+
+    fprintf(file, "%s", buffer2);
+
+    fclose(file);
+
+    printf("[ t3 ] Escritor terminou execucao!\n");
     pthread_exit(NULL);
 }
 
@@ -125,6 +155,7 @@ int main(int argc, char *argv[])
   // inicia os semaforos
   sem_init(&podeEscreverNoBuffer, 0, 1);
   sem_init(&podeLerBuffer, 0, 0);
+  sem_init(&podeEscreverResultadoEmArquivo, 0, 0);
 
   // cria as tres threads
   if ( pthread_create( &tid[2], NULL, leitor, NULL ) ) { printf("--ERRO: pthread_create()\n"); exit(-1); }

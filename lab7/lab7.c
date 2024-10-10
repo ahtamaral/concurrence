@@ -13,13 +13,13 @@
 #define N        10
 
 // Variaveis globais
-sem_t podeEscreverNoBuffer, podeLerBuffer, podeEscreverResultadoEmArquivo;      //semaforos para coordenar a ordem de execucao das threads
+sem_t podeEscreverNoBuffer, podeLerBuffer, podeEscreverResultadoEmArquivo;      // semaforos para coordenar a ordem de execucao das threads
 int terminouLeituraDoArquivo = 0;
 
 char buffer1[N + 1];  // +1 para armazenar END OF STRING
 
 // Buffer2 comporta o equivalente a até 200 blocos de tamanho N. Comprimento arbitrário.
-char buffer2[ ( N * 200 )];
+char buffer2[ ( N * 500 ) ];
 
 //funcao executada pela thread 1
 void *leitor (void *arg) 
@@ -49,7 +49,7 @@ void *leitor (void *arg)
         // Lê N blocos do arquivo.
         bytesRead = fread(buffer1, sizeof(char), N, file);
 
-        printf("[ t1 ] buffer1: %s\n", buffer1);
+        // printf("[ t1 ] buffer1: %s\n", buffer1);
 
         // Verifica se chegou ao final do arquivo.
         if ( feof(file) ) 
@@ -72,16 +72,13 @@ void *leitor (void *arg)
 
 void *processador (void *arg) {
 
-    int n = 0;
-    int linelength = 0;
-    char myBuffer1[N + 1]; 
-    int buf2Index = 0;
+    char localBuffer[ ( N * 500 ) ];
+    int localBuffIdx = 0;
 
     printf("[ t2 ] Processador esta executando...\n");
 
     while( 1 )
     {
-        linelength = 2*n + 1;
 
         // Quando o processador puder ler o buffer 1, prossegue
         printf("[ t2 ] Processador está aguardando liberação para consumir buffer1.\n");
@@ -97,25 +94,59 @@ void *processador (void *arg) {
         printf("[ t2 ] Processador LIBERADO para consumir buffer1.\n");
 
         // Copia conteúdo do buffer1 para buffer local.
-        strcpy(myBuffer1, buffer1);
+        // strcpy(myBuffer1, buffer1);
 
         for ( int i = 0; i < strlen( buffer1 ); i++ )
         {
-            buffer2[ buf2Index ] = buffer1[ i ];
-            buf2Index++;            
+            localBuffer[ localBuffIdx ] = buffer1[ i ];
+            localBuffIdx++;            
         }
 
-        printf("[ t2 ] Processador criou cópia local do buffer1: %s\n", myBuffer1);
+        // printf("[ t2 ] Processador criou cópia local do buffer1: %s\n", myBuffer1);
 
         // Quando o processador já tiver lido o buffer e o leitor puder sobrescrevê-lo, emite este sinal.
         printf("[ t2 ] Leitor pode sobrescrever buffer1.\n");
         sem_post( &podeEscreverNoBuffer);
         
-        if ( n < 10) n++;
     }
+    
+    // Local buffer tem o conteúdo do arquivo INTEIRO.
+    localBuffer[ localBuffIdx + 1 ] = '\0';
 
-    buffer2[ buf2Index + 1 ] = '\0';
-    printf("buf2: %s\n", buffer2);
+    int first = 0;
+    int n = 0;
+    int lineLength = 2*n + 1;
+    int last = first + lineLength;
+    
+    char localBuffer2[ N*500 ];
+    while (last < strlen( localBuffer ) )
+    {
+        // memset(bufferzinho, 0, sizeof(bufferzinho));
+        // printf("Limits: %d to %d (%d chars)\n", first, last, lineLength);
+        
+        int j = 0;
+        for ( j = first; j < last; j++)
+        {
+            // printf("line[%d] = localBuffer[%d]\n", j, j);
+            localBuffer2[j] = localBuffer[j];
+        }
+        localBuffer2[j] = '\n';
+        localBuffer2[j+1] = '\0';
+
+        first = last + 1;
+        if (n < 10) {            
+            n++;
+            lineLength = 2*n + 1;
+        }
+        else  {
+            lineLength = 10;
+        }
+        last = first + lineLength;
+
+    }
+    
+    strcpy(buffer2, localBuffer2);
+    // printf("buff2: %s\n", buffer2);
 
     sem_post( &podeEscreverResultadoEmArquivo );
 
